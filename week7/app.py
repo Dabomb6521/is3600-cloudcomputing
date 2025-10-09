@@ -19,41 +19,41 @@ redis_client = redis.Redis(
 
 def put_user(UserID, flavor):
     user_data = {
-        'UserID': user_id,
+        'UserID': UserID,
         'flavor': flavor
     }
     table.put_item(Item=user_data)
-    print(f"{user_id} Stored in Database")
+    print(f"{UserID} Stored in Database")
     return user_data
 
 def get_user_with_cache(UserID):
-    cache_key = f"user: {user_id}"
+    cache_key = f"user: {UserID}"
     cached_value = redis_client.get(cache_key)
 
     if cached_value:
-        print(f"Cache found for {user_id}")
+        print(f"Cache found for {UserID}")
         return json.loads(cached_value)
-    print(f"No cache hit for user {user_id}")
+    print(f"No cache hit for user {UserID}")
 
-    response = table.get_item(Key={'UserID': user_id})
+    response = table.get_item(Key={'UserID': UserID})
 
     if 'Item' not in response:
-        print(f"User {user_id} not found in Database")
+        print(f"User {UserID} not found in Database")
         return None
 
     user_data = response['Item']
-    print(f"User {user_id} found in Database")
+    print(f"User {UserID} found in Database")
 
     redis_client.set(
         cache_key,
         json.dumps(user_data),
         ex=3600
     )
-    print(f"User {user_id} Cached in Redis")
+    print(f"User {UserID} Cached in Redis")
     return user_data
 
-def get_user(user_id: str):
-    return get_user_with_cache(user_id)
+def get_user(UserID: str):
+    return get_user_with_cache(UserID)
 
 if __name__ == "__main__":
     put_user("user123", "chocolate")
