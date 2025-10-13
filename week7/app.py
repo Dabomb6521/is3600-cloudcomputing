@@ -7,14 +7,14 @@ dynamodb = boto3.resource(
     'dynamodb',
     region_name='us-west-2'
 )
-table = dynamodb.table('Assignment7_LazyLoading')
+table = dynamodb.Table('Assignment7_LazyLoading')
 
 # Initialize Redis
 redis_client = redis.Redis(
     host = 'localhost',
     port = '6379',
     db = 0,
-    decode_response=True
+    decode_responses=True
 )
 
 def put_user(UserID, flavor):
@@ -23,17 +23,17 @@ def put_user(UserID, flavor):
         'flavor': flavor
     }
     table.put_item(Item=user_data)
-    print(f"{UserID} Stored in Database")
+    print(f"\n{UserID} Stored in Database\n")
     return user_data
 
 def get_user_with_cache(UserID):
-    cache_key = f"user: {UserID}"
+    cache_key = f"user:{UserID}"
     cached_value = redis_client.get(cache_key)
 
     if cached_value:
-        print(f"Cache found for {UserID}")
+        print(f"Cache found for {UserID}\n")
         return json.loads(cached_value)
-    print(f"No cache hit for user {UserID}")
+    print(f"No cache in redis for user {UserID}")
 
     response = table.get_item(Key={'UserID': UserID})
 
@@ -56,7 +56,12 @@ def get_user(UserID: str):
     return get_user_with_cache(UserID)
 
 if __name__ == "__main__":
-    put_user("user123", "chocolate")
+    user_name = "Mia"
+    user_flavor = "Strawberry"
+    put_user(user_name, user_flavor)
 
-    user = get_user("user123")
+    print("----FIRST CALL----")
+    user = get_user(user_name)
     print(f"\nUser {user} found in database!")
+    print("\n----SECOND CALL----")
+    user = get_user(user_name)
